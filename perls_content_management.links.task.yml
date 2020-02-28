@@ -1,0 +1,19 @@
+user_flags:
+  title: Learner state
+  route_name: view.administrate_user_flags.administer_user_flags_completed
+  base_route: entity.user.canonical
+  weight: 10
+user_flags_completed:
+  title: Completed content
+  route_name: view.administrate_user_flags.administer_user_flags_completed
+  parent_id: user_flags
+user_flags_bookmarked:
+  title: Bookmarked content
+  route_name: view.administrate_user_flags.administer_user_flags_bookmarked
+  parent_id: user_flags
+  weight: 1
+user_flags_recommended:
+  title: Recommended content
+  route_name: view.administrate_user_flags.administer_user_flags_recommended
+  parent_id: user_flags
+  weight: 2

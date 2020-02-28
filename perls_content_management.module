@@ -1,0 +1,77 @@
+<?php
+
+/**
+ * @file
+ * Content management related codes.
+ */
+
+use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
+use Drupal\Core\Url;
+use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Form\FormStateInterface;
+
+/**
+ * Implements hook_form_alter().
+ */
+function perls_content_management_form_alter(&$form, FormStateInterface $form_state, $form_id) {
+  if ($form_id === 'user_register_form' || $form_id === 'user_form') {
+    $form['account']['mail']['#required'] = TRUE;
+  }
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter() for views_exposed_form.
+ *
+ * Changes "True" and "False" on the Flagged exposed filter to "Yes" and "No".
+ */
+function perls_content_management_form_views_exposed_form_alter(&$form, FormStateInterface $form_state, $form_id) {
+  if (isset($form['flagged']) && isset($form['flagged']['#options'])) {
+    $form['flagged']['#options'][1] = t('Yes');
+    $form['flagged']['#options'][0] = t('No');
+  }
+}
+
+/**
+ * Implements hook_entity_operation_alter().
+ *
+ * Adds operations for editing the learner's state.
+ */
+function perls_content_management_entity_operation_alter(array &$operations, EntityInterface $entity) {
+  if ($entity->getEntityTypeId() !== 'user') {
+    return;
+  }
+
+  $learnerStateOperations = [
+    'view.administrate_user_flags.administer_user_flags_completed' => t('Edit completions'),
+    'view.administrate_user_flags.administer_user_flags_bookmarked' => t('Edit bookmarks'),
+    'view.administrate_user_flags.administer_user_flags_recommended' => t('Edit recommendations'),
+  ];
+
+  foreach ($learnerStateOperations as $route => $label) {
+    $url = Url::fromRoute($route, ['user' => $entity->id()]);
+    if (!$url->access()) {
+      continue;
+    }
+
+    $operations[$route] = [
+      'title' => $label,
+      'url' => $url,
+      'weight' => 10,
+    ];
+  }
+}
+
+/**
+ * Implements hook_ENTITY_TYPE_view() for node entities.
+ */
+function perls_content_management_node_view(array &$build, EntityInterface $node, EntityViewDisplayInterface $display, $view_mode) {
+  // Collect statistics for card view mode.
+  if (!$node->isNew() && $view_mode == 'card' && node_is_page($node) && empty($node->in_preview)) {
+    $build['#attached']['library'][] = 'statistics/drupal.statistics';
+    $settings = [
+      'data' => ['nid' => $node->id()],
+      'url' => \Drupal::request()->getBasePath() . '/' . drupal_get_path('module', 'statistics') . '/statistics.php',
+    ];
+    $build['#attached']['drupalSettings']['statistics'] = $settings;
+  }
+}

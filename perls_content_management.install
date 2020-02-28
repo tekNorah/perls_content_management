@@ -1,0 +1,25 @@
+<?php
+
+/**
+ * @file
+ * Install tasks.
+ */
+
+use Drupal\Core\Entity\EntityStorageException;
+
+/**
+ * Remove seen flag.
+ */
+function perls_content_management_update_8001() {
+  /* @var $flag_service \Drupal\flag\FlagServiceInterface */
+  $flag_service = \Drupal::service('flag');
+  if ($flag_service->getFlagById('seen')) {
+    $flag = $flag_service->getFlagById('seen');
+    try {
+      $flag->delete();
+    }
+    catch (EntityStorageException $exception) {
+      \Drupal::logger('perls_content_management')->error('The seen flag does not exist. Something went wrong');
+    }
+  }
+}
